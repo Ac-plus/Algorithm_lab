@@ -7,3 +7,450 @@
 ## 1. 摘要
 
 动态规划是一种基于优化原理，使用分步递归、迭代等步骤对复杂问题进行求解的算法。本实验选择算法验证类课题，针对0/1背包问题和矩阵乘法链问题，以C++语言利用动态规划算法编写了两段程序，并分别对Florida State University的3个数据集和github的3个数据集进行了算法验证和时间性能分析。实验结果表明，所设计的动态规划算法能精确地解决上述两个问题，且通过改进减少重复计算后的算法能在此基础上提供更高的时间效率。
+
+## 2. 实验目的
+
+本实验的目的为：针对动态规划法，掌握利用算法进行问题求解的实验流程、强化对课堂所学算法原理的理解、提升利用算法原理进行编码实践的能力和了解算法研究的前沿动态，拓宽算法改进的思路。
+
+## 3. 实验设计
+### 2.1 0/1背包问题
+
+问题描述：设有 $n$ 个物品，它们的重量和价值分别为 $w[i]$ 和 $p[i]$ 。现有一容量为 $c$ 的背包，需要以 $n$ 元组的形式给出使得价值最大的物品装法，同时求出在此最优解下的最大价值。
+
+实验设计流程如下：
+
+1. 分析问题性质，写出该问题的动态规划方程。设 $f(i,y)$ 是以 $y$ 为容量装入物品 $i,i+1,…,n$ 的最优效益值，则有
+
+   - 若 $y\geq w[i]$ ，则 $f(i,y)=\max(f(i+1,y),f(i+1,y-w[i])+p[i])$
+   - 否则， $f(i,y)=f(i+1,y)$
+     
+2. 根据动态规划方程设计算法，编写伪代码。
+3. 将伪代码完善成可运行的程序，并添加输入输出语句等必要部分。
+
+### 2.2 矩阵乘法链问题
+问题描述：给出 $q$ 个矩阵的行数和列数，将它们作连乘，求使得矩阵元素间乘法次数最少的矩阵乘法顺序以及这一最少的乘法次数。
+
+实验设计流程如下：
+
+1. 分析问题性质，写出该问题的动态规划方程。为方便起见，设矩阵的行、列数存放在 $r[1:q+1]$ 中， $c(i,j)$ 为计算第i到j个矩阵作连乘的最少乘法次数，则
+
+$$c(i,j) = \min_{i\leq k < j} \{c(i, k) + c(k + 1, j) + r[i]\times r[k+1]\times r[j+1]\}$$
+
+2. 根据动态规划方程设计算法，编写伪代码。
+3. 将伪代码完善成可运行的程序，并添加输入输出语句等必要部分。
+
+## 3. 代码实现
+### 3.1 0/1背包问题
+
+1.  `f(i, y)` 函数
+```cpp
+int f(int i, int y) {
+    if (i==n)  return (y<w[n] ? 0:p[n]);
+if (y<w[i])  return f(i+1, y);
+
+return max(f(i+1, y), f(i+1,y-w[i])+p[i]);
+}
+```
+
+2. 为提高效率减少重复计算的 `f1(i, y)` 函数
+```cpp
+int fArray[N][N]={0};
+int f1(int i, int y) {
+    //检查是否已经计算过
+    if (fArray[i][y]>=0) return fArray[i][y];
+    if (i==n){  //尚未计算过
+        fArray[i][y]=(y<w[n] ? 0:p[n]);
+        return fArray[i][y];
+    } 
+    if (y<w[i]) 
+        fArray[i][y]=f1(i+1, y);
+    else {
+        fArray[i][y]=max(f1(i+1,y),
+f1(i+1,y-w[i])+p[i]);
+    }
+    return fArray[i][y];
+} 
+
+3. `traceback` 函数，用于回溯求解 `x[]`
+```cpp
+void traceback(int *w, int n, int knapsackCapacity, int *x) 
+{
+    for (int i=1; i<n; i++) 
+        if (f(i,knapsackCapacity)==f(i+1,
+knapsackCapacity))
+            x[i] = 0;
+        else {
+            x[i] = 1;
+            knapsackCapacity -= w[i];
+        }
+    x[n]=(f(n,knapsackCapacity)>0)? 1:0;
+    cout << "The best x[] is: ";
+    for (int i=1; i<=n; i++)  cout << x[i] << " ";
+    cout << endl;
+}
+
+```
+	 
+整个程序的输入为 `c`，`n`，`w[]` 和 `p[]`，输出优化值 `f(1,c)` 和优化解(best profit)元组。同时还使用了 `clock()` 函数记录动态规划和回溯步骤的运行时间。
+
+### 3.2 矩阵乘法链问题
+ 
+1. `c(i,j)` 函数
+```cpp
+int c(int i, int j) { 
+	if (i == j) return 0;
+	if (i == j - 1) {
+		kay[i][i+1] = i;
+		return r[i]*r[i+1]*r[i+2];
+	}
+	
+	int u = c(i,i)+c(i+1,j)+r[i]*r[i+1]*r[j+1];
+	kay[i][j] = i;
+	
+	for (int k=i+1; k<j; k++) {
+		int t = c(i,k)+c(k+1,j)+r[i]*r[k+1]*r[j+1];
+		if (t < u) {
+			u = t;
+			kay[i][j] = k;
+		}
+	}
+	return u;
+}
+```
+
+2. `c1(i,j)` 函数，减少了重复计算次数
+```cpp
+int c1(int i, int j) {
+	if (theC[i][j] > 0) return theC[i][j];
+	if (i == j) return 0;
+	if (i == j - 1) {
+		kay[i][i+1] = i;
+		theC[i][j] = r[i]*r[i+1]*r[i+2];
+		return theC[i][j];
+	}
+	
+	int u = c1(i,i)+c1(i+1,j)+r[i]*r[i+1]*r[j+1];
+	kay[i][j] = i;
+	
+	for (int k=i+1; k<j; k++) {
+		int t = c1(i,k)+c1(k+1,j)+r[i]*r[k+1]*r[j+1];
+		if (t < u) {
+			u = t;
+			kay[i][j] = k;
+		}
+	}
+	
+	theC[i][j]=u;
+	return theC[i][j];
+}
+```
+
+3. `traceback` 函数，回溯求解乘法顺序
+```cpp
+void traceback(int i, int j) { //回溯求解乘法顺序
+	if (i == j) return;
+	traceback(i, kay[i][j]);
+	traceback(kay[i][j]+1, j);
+	cout << "Multiply M(" << i << ", " << kay[i][j] << 
+			") and M(" << (kay[i][j]+1) << ", " << j << ")" << endl;
+}
+```
+整个程序输入 $q$ 和这 $q$ 个矩阵的行、列数，输出优化值 $c(0,q-1)$ 和优化解。其中，优化解以多条 `Multiply M(*, *) and M(*, *)` 语句的形式表示。同样地，该程序也记录了动态规划和回溯步骤的运行时间。
+
+3.1和3.2都使用了两种递归函数计算优化值，一种为直接进行递归，另一种为去除了重复运算的递归。另外，本实验的完整代码将随附件提交。
+
+## 4 实验结果与复杂性分析
+
+### 4.1 0/1背包问题
+
+#### 4.1.1 实验结果
+
+输入Florida State University的3个数据集，结果分别如下。每个数据集的实验结果有两幅图，上图是调用普通递归函数 `f(1,c)` 的结果，下图是调用无重复计算递归函数 `f1(1,c)` 的结果。
+
+**数据分布**
+
+1. 数据集P01
+
+|容量 `c`|物品个数 `n`|权重数组 `w`|价值数组 `p`|
+|---|---|---|---|
+|165|10|23,31,29,44,53,38,63,85,89,92|92,57,49,68,60,43,67,84,87,72|
+
+2. 数据集P02
+
+|容量 `c`|物品个数 `n`|权重数组 `w`|价值数组 `p`|
+|---|---|---|---|
+|26|5|12,7,11,8,9|24,13,23,15,16|
+
+3. 数据集P03
+
+|容量 `c`|物品个数 `n`|权重数组 `w`|价值数组 `p`|
+|---|---|---|---|
+|190|6|55,59,80,64,75,17|50,50,64,46,50,5|
+
+**实验数据**
+
+1. 数据集P01
+
+- 最大价值：309
+- 分配方案：1,1,1,1,0,1,0,0,0,0
+- 执行时间：
+  - `f`：5ms
+  - `f1`：4ms
+
+2. 数据集P02
+
+- 最大价值：51
+- 分配方案：0,1,1,1,0
+- 执行时间：
+  - `f`：4ms
+  - `f1`：2ms
+
+3. 数据集P03
+
+- 最大价值：150
+- 分配方案：1,1,0,0,1,0
+- 执行时间：
+  - `f`：4ms
+  - `f1`：4ms
+
+#### 4.1.2 结果分析
+对于 `f(i, y)` ，其时间复杂度的计算式为
+
+$$
+T\left(1\right)=a;
+$$
+
+$$
+T\left(n\right)\le2T\left(n-1\right)+b,(n>1)
+$$
+
+式中 $a,b$ 均为常数，作迭代展开得 $T\left(n\right)=O(2^n)$ 。而对于 `f1(i,y)`，由于其将计算过的 `f(i,y)` 存储起来，之后需要时只需从数组中取得即可，所以其时间复杂度为
+
+$$
+T\left(n\right)=\mathrm{\Theta}\left(1\right)\ast\left(c+1\right)\left(n+1\right)=O(cn) 
+$$
+
+程序最后会输出计算优化解和优化值的执行时间，从中可看出不同函数和数据集性能的差异。
+
+数据集的分布对算法的效率会产生一定的影响。递归函数`f(i,y)`的效率之所以达到指数级别复杂度，和其中包含重复的计算有很大关系。例如,考虑
+```
+c=10, n=5, p=[6,3,5,4,6], w=[2,2,6,5,4]
+```
+这一数据集，它执行 `f(1,10)` 的递归树结构如图所示。
+ 
+<img width="594" height="289" alt="image" src="https://github.com/user-attachments/assets/bfc86d76-109d-4dcb-88ab-3a7bbd973614" />
+
+图中第 $i$ 层内容为 $y$ 的结点表示程序需要计算的 `f(i,y)`（i=1,2,…,n），则标蓝的结点需要重复计算。出现这种情况的原因是 `w[]` 中出现了两个连续的相同元素（`w[1],w[2]`），`f(1,10)` 可以先调用 `f(2,10-0)`，然后调用 `f(3,10-0-2)=f(3,8)`；也可以先调用 `f(2,10-2)`,再调用 `f(3,10-2-0)=f(3,8)`。于是出现了两个 `f(3,8)` 结点，它们其后展开的子树也完全一样，这就导致了重复计算。
+
+从本质上来说，第 $i(i>1)$ 层有 $2^{i-1}$ 个结点 $y$ ，它们的取值为
+
+$$\{w\left[1\right]-\sum_{j=1}^{i-1} x[j]\cdot w[j], x[j]=1\ or\ 0 \}$$
+
+所以，如果数据集的分布满足以下条件，则会出现重复计算。该条件为：在第 $i$ 层时，存在 $m(m\geq2)$ 个不同的序列 $x_1[1:i-1],...,x_m[1:i-1]$ ，使得
+
+$$\sum_{j=1}^{i-1}{x_1\left[j\right]w\left[j\right]=\sum_{j=1}^{i-1}{x_2\left[j\right]w\left[j\right]}=\ldots=\sum_{j=1}^{i-1}{x_m\left[j\right]w\left[j\right]}}$$
+
+且 $i$ 越小，出现相同结点的层数就越低，后续产生重复计算的次数越多，算法时间效率受到的影响越大。
+
+正是因为如此，对 `f(i,y)` 改进得到 `f1(i,y)` 函数。该函数先搜索 `fArray` 数组，若所求结果已计算过则直接取出，若未计算过则将其算出后存入数组中，以供未来可能的需要，这样就避免了重复计算。
+
+### 4.2 矩阵乘法链问题
+#### 4.2.1 实验结果
+
+输入GitHub的3个数据集，结果分别如下。每个数据集的实验结果有两幅图，上图是调用普通递归函数 `c(0,q-1)` 的结果，下图是调用无重复计算递归函数 `c1(0,q-1)` 的结果。
+
+1. 数据集input_004
+```
+4
+14 14
+14 2
+2 4
+4 5
+572
+Multiply M(0, 0) and M(1, 1)
+Multiply M(2, 2) and M(3, 3)
+Multiply M(0, 1) and M(2, 3)
+Total time: 4ms
+```
+
+```
+4
+14 14
+14 2
+2 4
+4 5
+572
+Multiply M(0, 0) and M(1, 1)
+Multiply M(2, 2) and M(3, 3)
+Multiply M(0, 1) and M(2, 3)
+Total time: 4ms
+```
+
+
+2. 数据集input_008
+
+```
+8
+9 16
+16 4
+4 1
+1 7
+7 2
+2 11
+11 4
+4 16
+496
+Multiply M(1, 1) and M(2, 2)
+Multiply M(0, 0) and M(1, 2)
+Multiply M(3, 3) and M(4, 4)
+Multiply M(3, 4) and M(5, 5)
+Multiply M(3, 5) and M(6, 6)
+Multiply M(3, 6) and M(7, 7)
+Multiply M(0, 2) and M(3, 7)
+Total time: 8ms
+```
+
+```
+8
+9 16
+16 4
+4 1
+1 7
+7 2
+2 11
+11 4
+4 16
+496
+Multiply M(1, 1) and M(2, 2)
+Multiply M(0, 0) and M(1, 2)
+Multiply M(3, 3) and M(4, 4)
+Multiply M(3, 4) and M(5, 5)
+Multiply M(3, 5) and M(6, 6)
+Multiply M(3, 6) and M(7, 7)
+Multiply M(0, 2) and M(3, 7)
+Total time: 7ms
+```
+
+3. 数据集input_016
+
+```
+16
+12 11
+11 6
+6 2
+2 10
+10 13
+13 11
+11 7
+7 8
+8 13
+13 3
+3 10
+10 4
+4 8
+8 3
+3 5
+5 8
+2048
+Multiply M(1, 1) and M(2, 2)
+Multiply M(0, 0) and M(1, 2)
+Multiply M(3, 3) and M(4, 4)
+Multiply M(3, 4) and M(5, 5)
+Multiply M(3, 5) and M(6, 6)
+Multiply M(3, 6) and M(7, 7)
+Multiply M(3, 7) and M(8, 8)
+Multiply M(3, 8) and M(9, 9)
+Multiply M(3, 9) and M(10, 10)
+Multiply M(3, 10) and M(11, 11)
+Multiply M(3, 11) and M(12, 12)
+Multiply M(3, 12) and M(13, 13)
+Multiply M(3, 13) and M(14, 14)
+Multiply M(3, 14) and M(15, 15)
+Multiply M(0, 2) and M(3, 15)
+Total time: 64ms
+```
+
+```
+16
+12 11
+11 6
+6 2
+2 10
+10 13
+13 11
+11 7
+7 8
+8 13
+13 3
+3 10
+10 4
+4 8
+8 3
+3 5
+5 8
+2048
+Multiply M(1, 1) and M(2, 2)
+Multiply M(0, 0) and M(1, 2)
+Multiply M(3, 3) and M(4, 4)
+Multiply M(3, 4) and M(5, 5)
+Multiply M(3, 5) and M(6, 6)
+Multiply M(3, 6) and M(7, 7)
+Multiply M(3, 7) and M(8, 8)
+Multiply M(3, 8) and M(9, 9)
+Multiply M(3, 9) and M(10, 10)
+Multiply M(3, 10) and M(11, 11)
+Multiply M(3, 11) and M(12, 12)
+Multiply M(3, 12) and M(13, 13)
+Multiply M(3, 13) and M(14, 14)
+Multiply M(3, 14) and M(15, 15)
+Multiply M(0, 2) and M(3, 15)
+Total time: 16ms
+```
+
+#### 4.2.2 结果分析
+
+对于函数`c(i,j)`，设 $q=j-i+1$ ，则有
+
+- $T(q)=d, q\leq 2$
+- $T(q)=2\sum_{k=1}^{q-1}t(k)+eq, q>2$
+
+
+当 $q>2$ 时，对上式作放缩得
+
+$$T\left(q\right)>2T\left(q-1\right)+e$$
+
+所以
+
+$$T\left(q\right)=\mathrm{\Omega}(2^q)$$
+
+此外，函数 `traceback(i,j)` 的复杂度为
+
+$$T\left(q\right)=d\ast\left(j-i+1\right)=O(q)$$
+
+数据集对该算法复杂度增加的影响主要由 $q$  导致。因为对于每个`c(i,j)`都需要调用`c(i,i),c(i,i+1),...,c(i,j-1)`以比较大小，所以随着 $q$ 的增大，递归的次数会显著增大，复杂度也增加地十分明显。
+
+为此，提出改进的递归方案，仿照`f1(i,y)`函数，`c1(i,j)`也先对是否计算过所求值做检索。由于原来每个`c(i,j)`都需要做大量的重复运算，而改进后这些值只需从`theC`数组中取得即可，因此大大提升了算法的效率。
+
+对于改进后的`c1(i,j)`，如果之前都已算过`c1(i,i),c1(i,i+1),...,c1(j-2)`的所有值，那么只需计算一次新值即可。对于 $s=j-i>1$ ，计算新值`c(a,b)`需要的时间开销为 $s$ 。将 $s$ 当作首次计算的开销计算，则
+
+$$T\left(q\right)=\sum_{s=0}^{q-1}{s\ast\left(q-s+1\right)=O(q^3)}$$
+
+从实验的数据集来看，当 $q=4,q=8$ 时，c和c1的效率相差不大，只有10%左右，而当 $q=16$ 时二者的效率就有显著差异，c1的执行时间比c缩短了约75%。
+
+除了GitHub的3个数据集外，还验证了 $q=6,10,12,14,18,20$ 的6个数据集，记录了它们运行普通递归(c+traceback)和去除重复计算递归(c1+traceback)的时间。两图的横轴均为q，纵轴为运行普通递归/去除重复计算递归的时间（ms）。从这两个图可以看出，c的时间增长极快，而c1显著提高了算法效率。
+
+<img width="706" height="447" alt="image" src="https://github.com/user-attachments/assets/b77557bf-7126-49bc-9b54-dc9689aede7b" />
+
+_普通递归_
+
+<img width="693" height="415" alt="image" src="https://github.com/user-attachments/assets/a65ace78-2d33-4fef-b6f9-35c620edc586" />
+
+_去除重复计算_
+
+## 5. 总结
+
+本实验使用动态规划算法，对0/1背包和矩阵乘法链两个问题进行了解法验证。
+
+<img width="1033" height="608" alt="image" src="https://github.com/user-attachments/assets/2f5d902f-52bb-43a9-b869-c0bd10f64664" />
+
+经过思路设计、代码设计、编码调试和结果分析，得到以下实验结论：动态规划算法能给出复杂优化问题的精确解，且数据的分布和数据集的容量在满足一定条件的情况下会对算法的复杂度产生较大影响，通过减少重复计算次数能对算法的效率作出有效改进。
