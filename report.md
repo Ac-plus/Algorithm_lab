@@ -46,9 +46,8 @@ $$c(i,j) = \min_{i\leq k < j} \{c(i, k) + c(k + 1, j) + r[i]\times r[k+1]\times 
 ```cpp
 int f(int i, int y) {
     if (i==n)  return (y<w[n] ? 0:p[n]);
-if (y<w[i])  return f(i+1, y);
-
-return max(f(i+1, y), f(i+1,y-w[i])+p[i]);
+	if (y<w[i])  return f(i+1, y);
+	return max(f(i+1, y), f(i+1,y-w[i])+p[i]);
 }
 ```
 
@@ -65,19 +64,18 @@ int f1(int i, int y) {
     if (y<w[i]) 
         fArray[i][y]=f1(i+1, y);
     else {
-        fArray[i][y]=max(f1(i+1,y),
-f1(i+1,y-w[i])+p[i]);
+        fArray[i][y]=max(f1(i+1,y), f1(i+1,y-w[i])+p[i]);
     }
     return fArray[i][y];
-} 
+}
+```
 
 3. `traceback` 函数，用于回溯求解 `x[]`
 ```cpp
 void traceback(int *w, int n, int knapsackCapacity, int *x) 
 {
     for (int i=1; i<n; i++) 
-        if (f(i,knapsackCapacity)==f(i+1,
-knapsackCapacity))
+        if (f(i,knapsackCapacity)==f(i+1, knapsackCapacity))
             x[i] = 0;
         else {
             x[i] = 1;
@@ -159,7 +157,7 @@ void traceback(int i, int j) { //回溯求解乘法顺序
 
 3.1和3.2都使用了两种递归函数计算优化值，一种为直接进行递归，另一种为去除了重复运算的递归。另外，本实验的完整代码将随附件提交。
 
-## 4 实验结果与复杂性分析
+## 4. 实验结果与复杂性分析
 
 ### 4.1 0/1背包问题
 
@@ -259,47 +257,30 @@ $$\sum_{j=1}^{i-1}{x_1\left[j\right]w\left[j\right]=\sum_{j=1}^{i-1}{x_2\left[j\
 
 输入GitHub的3个数据集，结果分别如下。每个数据集的实验结果有两幅图，上图是调用普通递归函数 `c(0,q-1)` 的结果，下图是调用无重复计算递归函数 `c1(0,q-1)` 的结果。
 
+**数据分布 & 实验结果**
+
 1. 数据集input_004
+
+- 矩阵数量：4
+- 各矩阵规模：[14,14], [14,2], [2,4], [4,5]
+- 最优操作次数：572
+- 乘法链：
 ```
-4
-14 14
-14 2
-2 4
-4 5
-572
 Multiply M(0, 0) and M(1, 1)
 Multiply M(2, 2) and M(3, 3)
 Multiply M(0, 1) and M(2, 3)
-Total time: 4ms
 ```
-
-```
-4
-14 14
-14 2
-2 4
-4 5
-572
-Multiply M(0, 0) and M(1, 1)
-Multiply M(2, 2) and M(3, 3)
-Multiply M(0, 1) and M(2, 3)
-Total time: 4ms
-```
-
+- 执行时间：
+  - c：4ms
+  - c1：4ms
 
 2. 数据集input_008
 
+- 矩阵数量：8
+- 各矩阵规模：[9, 16], [16, 4], [4, 1], [1, 7], [7, 2], [2, 11], [11, 4], [4, 16]
+- 最优操作次数：496
+- 乘法链：
 ```
-8
-9 16
-16 4
-4 1
-1 7
-7 2
-2 11
-11 4
-4 16
-496
 Multiply M(1, 1) and M(2, 2)
 Multiply M(0, 0) and M(1, 2)
 Multiply M(3, 3) and M(4, 4)
@@ -307,88 +288,19 @@ Multiply M(3, 4) and M(5, 5)
 Multiply M(3, 5) and M(6, 6)
 Multiply M(3, 6) and M(7, 7)
 Multiply M(0, 2) and M(3, 7)
-Total time: 8ms
 ```
-
-```
-8
-9 16
-16 4
-4 1
-1 7
-7 2
-2 11
-11 4
-4 16
-496
-Multiply M(1, 1) and M(2, 2)
-Multiply M(0, 0) and M(1, 2)
-Multiply M(3, 3) and M(4, 4)
-Multiply M(3, 4) and M(5, 5)
-Multiply M(3, 5) and M(6, 6)
-Multiply M(3, 6) and M(7, 7)
-Multiply M(0, 2) and M(3, 7)
-Total time: 7ms
-```
+- 执行时间：
+  - c：8ms
+  - c1：7ms
 
 3. 数据集input_016
 
-```
-16
-12 11
-11 6
-6 2
-2 10
-10 13
-13 11
-11 7
-7 8
-8 13
-13 3
-3 10
-10 4
-4 8
-8 3
-3 5
-5 8
-2048
-Multiply M(1, 1) and M(2, 2)
-Multiply M(0, 0) and M(1, 2)
-Multiply M(3, 3) and M(4, 4)
-Multiply M(3, 4) and M(5, 5)
-Multiply M(3, 5) and M(6, 6)
-Multiply M(3, 6) and M(7, 7)
-Multiply M(3, 7) and M(8, 8)
-Multiply M(3, 8) and M(9, 9)
-Multiply M(3, 9) and M(10, 10)
-Multiply M(3, 10) and M(11, 11)
-Multiply M(3, 11) and M(12, 12)
-Multiply M(3, 12) and M(13, 13)
-Multiply M(3, 13) and M(14, 14)
-Multiply M(3, 14) and M(15, 15)
-Multiply M(0, 2) and M(3, 15)
-Total time: 64ms
-```
 
+- 矩阵数量：16
+- 各矩阵规模：[12,11], [11,6], [6,2], [2,10], [10,13], [13,11], [11,7], [7,8], [8,13], [13,3], [3,10], [10,4], [4,8], [8,3], [3,5], [5,8]
+- 最优操作次数：496
+- 乘法链：
 ```
-16
-12 11
-11 6
-6 2
-2 10
-10 13
-13 11
-11 7
-7 8
-8 13
-13 3
-3 10
-10 4
-4 8
-8 3
-3 5
-5 8
-2048
 Multiply M(1, 1) and M(2, 2)
 Multiply M(0, 0) and M(1, 2)
 Multiply M(3, 3) and M(4, 4)
@@ -404,8 +316,10 @@ Multiply M(3, 12) and M(13, 13)
 Multiply M(3, 13) and M(14, 14)
 Multiply M(3, 14) and M(15, 15)
 Multiply M(0, 2) and M(3, 15)
-Total time: 16ms
 ```
+- 执行时间：
+  - c：64ms
+  - c1：16ms
 
 #### 4.2.2 结果分析
 
