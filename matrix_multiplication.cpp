@@ -52,7 +52,7 @@ int c1(int i, int j) {
 	return theC[i][j];
 }
 
-void traceback(int i, int j) { //回溯求解乘法顺序
+void traceback(int i, int j) { //禄脴脣脻脟贸陆芒鲁脣路篓脣鲁脨貌
 	if (i == j) return;
 	traceback(i, kay[i][j]);
 	traceback(kay[i][j]+1, j);
