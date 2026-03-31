@@ -18,4 +18,4 @@ g++ -o matrix_multiplication matrix_multiplication.cpp
 
 ## 实验文档
 
-- `report.md`
+- `README.md`
